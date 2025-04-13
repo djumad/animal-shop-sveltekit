@@ -1,6 +1,24 @@
-<script>
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+  import Swal from 'sweetalert2';
     export let data;
     console.log(data.animal);
+
+    export let form;
+    onMount(()=>{
+      if(form?.message){
+        Swal.fire({
+          title : 'Success',
+          text : form.message,
+          icon : 'success',
+          confirmButtonColor : '#3085d6',
+          confirmButtonText : 'Okee'
+        }).then(()=>{
+          goto('/auth/dashboard')
+        })
+      }
+    })
   </script>
   
   <main>

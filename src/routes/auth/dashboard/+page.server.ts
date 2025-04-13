@@ -1,7 +1,16 @@
 import type { Actions, PageServerLoad } from './$types';
 import { prismaClient } from '$lib/database/prisma';
 import { fail, redirect } from '@sveltejs/kit';
-import { deleteFile, replaceFile, saveFile } from '$lib/server/upload';
+import { deleteFile, saveFile } from '$lib/server/upload';
+import { z } from 'zod';
+
+const animalSchema = z.object({
+  nama: z.string().min(1, 'Nama harus diisi'),
+  jenis: z.string().min(1, 'Jenis harus diisi'),
+  harga: z.string().refine(val => !isNaN(Number(val)), {
+    message: 'Harga harus berupa angka',
+  }),
+});
 
 export const load: PageServerLoad = async ({ locals }) => {
   console.log(locals.user);
@@ -12,10 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   create: async ({ request, locals }) => {
-    console.log('Request prototype:', Object.getPrototypeOf(request));
-    console.log('typeof request.formData:', typeof request.formData);
     const user = locals.user;
-    console.log(user);
     if (!user) return fail(401, { message: 'Unauthorized' });
 
     const formData = await request.formData();
@@ -24,24 +30,31 @@ export const actions: Actions = {
     const harga = formData.get('harga') as string;
     const foto = formData.get('foto') as File;
 
+    // Validasi input dengan Zod
+    const parsed = animalSchema.safeParse({ nama, jenis, harga });
+    if (!parsed.success) {
+      const errors = parsed.error.flatten().fieldErrors;
+      return fail(400, { message: 'Validasi gagal', errors });
+    }
+
     const upload = await saveFile(foto, 'uploads/animal');
 
-    console.log(upload);
     if (!upload.success) {
       return fail(400, { message: upload.error });
     }
 
     await prismaClient.animal.create({
       data: {
-        nama,
-        jenis,
-        harga: BigInt(harga),
+        nama: parsed.data.nama,
+        jenis: parsed.data.jenis,
+        harga: BigInt(parsed.data.harga),
         foto: upload.path!,
         userId: user.id
       }
     });
 
-    throw redirect(303, '/auth/dashboard');
+    // throw redirect(303, '/auth/dashboard') && {message : "success"};
+    return {message : "success"};
   },
 
   delete: async ({ request, locals }) => {
@@ -59,19 +72,18 @@ export const actions: Actions = {
       return fail(404, { message: 'Data tidak ditemukan' });
     }
 
-    await deleteFile(existing.foto); // hapus file dari server
+    await deleteFile(existing.foto);
 
     await prismaClient.animal.delete({
       where: { id }
     });
 
-    throw redirect(303, '/auth/dashboard');
+    return {deleteSuccess : "Delete Success"};
   },
 
   logout: async ({ cookies }) => {
     const token = cookies.get('session');
 
-    // Hapus token dari database jika perlu
     if (token) {
       await prismaClient.user.updateMany({
         where: { token },
@@ -79,7 +91,6 @@ export const actions: Actions = {
       });
     }
 
-    // Hapus cookie session
     cookies.delete('session', {
       path: '/',
       httpOnly: true,
@@ -87,10 +98,6 @@ export const actions: Actions = {
       secure: process.env.NODE_ENV === 'production',
     });
 
-    // Redirect ke halaman login
-    throw redirect(302, '/login');
-
+    return {logoutSuccess : "Logout Success"}
   }
-
-
 };

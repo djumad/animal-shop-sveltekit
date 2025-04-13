@@ -9,15 +9,15 @@ async function main() {
   await prisma.user.createMany({
     data: [
       {
-        nama: 'Admin Desa',
-        email: 'admin@desa.com',
+        nama: 'Admin Animal',
+        email: 'admin@animal.com',
         profile: 'profile1.jpg',
         password: hashedPassword,
         role: 'admin',
       },
       {
         nama: 'User Biasa',
-        email: 'user@desa.com',
+        email: 'user@animal.com',
         profile: 'profile2.jpg',
         password: hashedPassword,
         role: 'members',

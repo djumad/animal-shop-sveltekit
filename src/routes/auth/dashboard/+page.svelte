@@ -1,14 +1,45 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import Swal from 'sweetalert2';
+  import { onMount } from 'svelte';
 
   export let data;
+  export let form;
+
   const animal = data.animals;
 
-  const handleDelete = async (id: string, event: Event) => {
-    event.preventDefault();
+  onMount(() => {
+    if (form?.message) {
+      Swal.fire({
+        title: 'Sukses!',
+        text: form.message,
+        icon: 'success',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'Oke',
+      }).then(() => {
+        goto('/auth/dashboard');
+      });
+    }
 
-    const result = await Swal.fire({
+    if (form?.deleteSuccess) {
+      Swal.fire({
+        title: 'Data dihapus!',
+        text: 'Data hewan telah berhasil dihapus',
+        icon: 'success',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'Oke',
+      }).then(() => {
+        goto('/auth/dashboard');
+      });
+    }
+  });
+
+  // Fungsi untuk konfirmasi delete
+  function confirmDelete(e: Event) {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    
+    Swal.fire({
       title: 'Yakin ingin menghapus hewan ini?',
       text: "Data yang dihapus tidak dapat dikembalikan!",
       icon: 'warning',
@@ -17,18 +48,19 @@
       cancelButtonColor: '#3085d6',
       confirmButtonText: 'Ya, Hapus!',
       cancelButtonText: 'Batal',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        form.submit();
+      }
     });
+  }
 
-    if (result.isConfirmed) {
-      const form = event.target.closest('form');
-      form.submit();
-    }
-  };
-
-  const handleLogout = async (event: Event) => {
-    event.preventDefault();
+  // Fungsi untuk konfirmasi logout
+  function confirmLogout(e: Event) {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
     
-    const result = await Swal.fire({
+    Swal.fire({
       title: 'Yakin ingin logout?',
       icon: 'question',
       showCancelButton: true,
@@ -36,36 +68,22 @@
       cancelButtonColor: '#d33',
       confirmButtonText: 'Ya, Logout',
       cancelButtonText: 'Batal',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        form.submit();
+      }
     });
-
-    if (result.isConfirmed) {
-      const form = event.target.closest('form');
-      form.submit();
-    }
-  };
-
-  const handleSuccess = () => {
-    Swal.fire({
-      title: 'Berhasil!',
-      text: 'Data hewan berhasil diperbarui.',
-      icon: 'success',
-      confirmButtonColor: '#3085d6',
-      confirmButtonText: 'OK',
-    }).then(() => {
-      goto('/auth/dashboard');
-    });
-  };
+  }
 </script>
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <!-- Header dengan tombol logout -->
   <header class="flex justify-between items-center mb-8">
     <h1 class="text-3xl font-bold text-gray-900">Dashboard Admin</h1>
-    <form action="?/logout" method="post">
+    <form action="?/logout" method="post" on:submit|preventDefault={confirmLogout}>
       <button 
         type="submit" 
         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-        on:click={handleLogout}
       >
         Logout
       </button>
@@ -112,12 +130,11 @@
                   Edit
                 </a>
 
-                <form method="post" action="?/delete" class="flex-1">
+                <form method="post" action="?/delete" class="flex-1" on:submit|preventDefault={confirmDelete}>
                   <input type="hidden" name="id" value={data.id} />
                   <button
                     type="submit"
                     class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-                    on:click={handleDelete.bind(null, data.id)}
                   >
                     Hapus
                   </button>
