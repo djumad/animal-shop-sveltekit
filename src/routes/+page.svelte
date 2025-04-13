@@ -6,7 +6,7 @@
 </script>
 
 <Navbar />
-<main>
+<main class="m-4">
     {#if animal.length > 0}
       <div class="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {#each animal as data}
@@ -22,7 +22,7 @@
                 <div class="space-y-2 mb-4">
                   <h3 class="text-xl font-semibold text-gray-900 truncate">{data.nama}</h3>
                   <p class="text-gray-600">
-                    <span class="font-medium">Jenis:</span> {data.jenis}
+                    <span class="font-medium">Jenis Hewan:</span> {data.jenis}
                   </p>
                   <p class="text-blue-600 font-bold text-lg">
                     Rp {Number(data.harga).toLocaleString('id-ID')}

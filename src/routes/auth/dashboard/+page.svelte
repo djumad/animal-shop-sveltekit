@@ -5,7 +5,18 @@
 
   export let data;
   export let form;
+  let selectedImage: string | null = null;
 
+  function handleFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        selectedImage = e.target?.result as string;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
   const animal = data.animals;
 
   onMount(() => {
@@ -204,12 +215,16 @@
           <div class="flex items-center justify-center w-full">
             <label for="foto" class="flex flex-col w-full h-32 border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-lg cursor-pointer transition-colors">
               <div class="flex flex-col items-center justify-center pt-5 pb-6 h-full">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p class="mt-2 text-sm text-gray-500">
-                  <span class="font-semibold">Klik untuk upload</span> atau drag & drop
-                </p>
+                {#if !selectedImage}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p class="mt-2 text-sm text-gray-500">
+                    <span class="font-semibold">Klik untuk upload</span> atau drag & drop
+                  </p>
+                {:else}
+                  <img src={selectedImage} class="h-full w-full object-contain" alt="Preview gambar" />
+                {/if}
               </div>
               <input 
                 id="foto" 
@@ -218,6 +233,7 @@
                 accept="image/*" 
                 required 
                 class="hidden"
+                on:change={handleFileChange}
               />
             </label>
           </div>
